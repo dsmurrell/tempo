@@ -1,0 +1,6 @@
+project_name: tempo
+
+services:
+  app:
+    command: cd ~/projects/tempo && npm run dev
+    url: http://localhost:3000
