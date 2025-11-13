@@ -1,24 +1,71 @@
-// Event types with their suggested follow-up durations (in days)
+// Event type category - determines UI behavior
+export type EventTypeCategory = "meeting" | "message";
+
+// Event type definition
+export interface EventTypeDefinition {
+  id: string;
+  name: string;
+  category: EventTypeCategory;
+  defaultFollowUpDays: number;
+  isCustom: boolean;
+  createdAt?: string;
+}
+
+// Default event types provided by the system
+export const DEFAULT_EVENT_TYPES: EventTypeDefinition[] = [
+  {
+    id: "email",
+    name: "Email",
+    category: "message",
+    defaultFollowUpDays: 5,
+    isCustom: false,
+  },
+  {
+    id: "linkedin-connection",
+    name: "LinkedIn Connection Request",
+    category: "message",
+    defaultFollowUpDays: 7,
+    isCustom: false,
+  },
+  {
+    id: "linkedin-inmail",
+    name: "LinkedIn InMail",
+    category: "message",
+    defaultFollowUpDays: 7,
+    isCustom: false,
+  },
+  {
+    id: "phone-call",
+    name: "Phone Call",
+    category: "message",
+    defaultFollowUpDays: 7,
+    isCustom: false,
+  },
+  {
+    id: "meeting",
+    name: "Meeting",
+    category: "meeting",
+    defaultFollowUpDays: 14,
+    isCustom: false,
+  },
+  {
+    id: "reply-received",
+    name: "Reply Received",
+    category: "message",
+    defaultFollowUpDays: 2,
+    isCustom: false,
+  },
+];
+
+// Legacy enum for backward compatibility during migration
 export enum EventType {
   LINKEDIN_CONNECTION_REQUEST = "LinkedIn Connection Request",
   LINKEDIN_INMAIL = "LinkedIn InMail",
   EMAIL = "Email",
-  MEETING_INVITE = "Meeting Invite",
   MEETING = "Meeting",
   PHONE_CALL = "Phone Call",
-  FOLLOW_UP_EMAIL = "Follow-up Email",
+  REPLY_RECEIVED = "Reply Received",
 }
-
-// Suggested follow-up durations for each event type (in days)
-export const EVENT_FOLLOW_UP_DAYS: Record<EventType, number> = {
-  [EventType.LINKEDIN_CONNECTION_REQUEST]: 7,
-  [EventType.LINKEDIN_INMAIL]: 7,
-  [EventType.EMAIL]: 5,
-  [EventType.MEETING_INVITE]: 3,
-  [EventType.MEETING]: 14,
-  [EventType.PHONE_CALL]: 7,
-  [EventType.FOLLOW_UP_EMAIL]: 5,
-};
 
 export interface Company {
   id: string;
@@ -39,7 +86,7 @@ export interface Person {
   notes?: string;
   companyId?: string; // Reference to Company
   nextFollowUpDate?: string; // Manual override for follow-up date (ISO string)
-  status: "active" | "closed"; // Track if person is active or closed
+  status: "active" | "parked" | "closed"; // Track if person is active, parked, or closed
   createdAt: string;
   updatedAt: string;
 }
@@ -49,8 +96,9 @@ export interface Event {
   personId: string; // Reference to Person
   date: string; // ISO date string
   time?: string; // Time in HH:MM format
-  type: EventType;
+  type: string; // Event type ID (references EventTypeDefinition.id)
   notes?: string;
+  customFollowUpDays?: number; // Custom override for this specific event's follow-up threshold
   createdAt: string;
   updatedAt: string;
 }
@@ -59,10 +107,12 @@ export interface Event {
 export interface FollowUpStatus {
   personId: string;
   lastEvent?: Event;
+  lastEventType?: EventTypeDefinition;
   daysSinceLastEvent: number;
   suggestedFollowUpDays: number;
   daysOverdue: number;
   isOverdue: boolean;
   urgency: "critical" | "high" | "medium" | "low" | "none";
+  isFutureEvent: boolean;
 }
 

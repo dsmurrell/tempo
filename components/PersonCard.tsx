@@ -38,11 +38,20 @@ export default function PersonCard({
           )}
         </div>
 
-        {company && (
-          <div className="mb-3">
-            <Badge variant="soft">{company.name}</Badge>
-          </div>
-        )}
+        <div className="flex items-center gap-2 mb-3">
+          {company && <Badge variant="soft">{company.name}</Badge>}
+          <Badge 
+            variant={
+              person.status === "active" 
+                ? "success" 
+                : person.status === "parked"
+                ? "warning"
+                : "soft"
+            }
+          >
+            {person.status.charAt(0).toUpperCase() + person.status.slice(1)}
+          </Badge>
+        </div>
 
         {person.email && (
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">

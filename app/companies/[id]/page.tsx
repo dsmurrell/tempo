@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore } from "@/store/useStore";
@@ -12,6 +12,11 @@ export default function CompanyDetailPage() {
   const params = useParams();
   const router = useRouter();
   const companyId = params.id as string;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const {
     getCompany,
@@ -23,6 +28,15 @@ export default function CompanyDetailPage() {
   const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Prevent hydration mismatch by only rendering after client mount
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="animate-pulse text-gray-500 dark:text-gray-400">Loading...</div>
+      </div>
+    );
+  }
 
   const company = getCompany(companyId);
   const people = getPeopleByCompany(companyId);

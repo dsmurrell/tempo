@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useStore } from "@/store/useStore";
-import { Event, EventType } from "@/types";
+import { Event } from "@/types";
 
 interface EditEventModalProps {
   isOpen: boolean;
@@ -15,7 +15,10 @@ export default function EditEventModal({
   onClose,
   event,
 }: EditEventModalProps) {
-  const { updateEvent } = useStore();
+  const { updateEvent, getAllEventTypes } = useStore();
+  const eventTypes = getAllEventTypes();
+  const messageTypes = eventTypes.filter((t) => t.category === "message");
+  const meetingTypes = eventTypes.filter((t) => t.category === "meeting");
   const [formData, setFormData] = useState({
     date: event.date,
     time: event.time || "",
@@ -62,15 +65,28 @@ export default function EditEventModal({
               required
               value={formData.type}
               onChange={(e) =>
-                setFormData({ ...formData, type: e.target.value as EventType })
+                setFormData({ ...formData, type: e.target.value })
               }
               className="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:bg-gray-800 dark:text-white transition-colors duration-200 text-sm"
             >
-              {Object.values(EventType).map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
+              {messageTypes.length > 0 && (
+                <optgroup label="Messages">
+                  {messageTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {meetingTypes.length > 0 && (
+                <optgroup label="Meetings">
+                  {meetingTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
 

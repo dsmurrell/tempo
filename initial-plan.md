@@ -1,3 +1,5 @@
+(apologies, didn't save the markdown version of this plan, that would have been ideal)
+
 Tempo CRM Implementation Plan
 1. Project Setup & Dependencies
 Initialize Next.js 14 with TypeScript and install required dependencies:

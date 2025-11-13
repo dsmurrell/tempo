@@ -6,7 +6,8 @@ import {
   Event,
   EventType,
   FollowUpStatus,
-  EVENT_FOLLOW_UP_DAYS,
+  EventTypeDefinition,
+  DEFAULT_EVENT_TYPES,
 } from "@/types";
 
 interface TempoState {
@@ -14,6 +15,8 @@ interface TempoState {
   people: Person[];
   companies: Company[];
   events: Event[];
+  customEventTypes: EventTypeDefinition[]; // User-created event types
+  _hasHydrated?: boolean; // Migration flag
 
   // People actions
   addPerson: (person: Omit<Person, "id" | "createdAt" | "updatedAt">) => string;
@@ -34,6 +37,14 @@ interface TempoState {
   deleteEvent: (id: string) => void;
   getEventsByPerson: (personId: string) => Event[];
 
+  // Event Type actions
+  getAllEventTypes: () => EventTypeDefinition[];
+  getEventTypeById: (id: string) => EventTypeDefinition | undefined;
+  addEventType: (name: string, category: "meeting" | "message", followUpDays: number) => string;
+  updateEventType: (id: string, updates: Partial<EventTypeDefinition>) => void;
+  deleteEventType: (id: string) => { success: boolean; eventsUsingType?: Event[] };
+  getEventsUsingEventType: (typeId: string) => Event[];
+
   // Follow-up logic
   getFollowUpStatus: (personId: string) => FollowUpStatus;
   getAllFollowUpStatuses: () => FollowUpStatus[];
@@ -45,6 +56,34 @@ const generateId = () => {
 
 const getTimestamp = () => new Date().toISOString();
 
+// Migration: Convert old EventType enum values to new event type IDs
+const migrateEventTypes = (events: Event[]): Event[] => {
+  const typeMapping: Record<string, string> = {
+    "LinkedIn Connection Request": "linkedin-connection",
+    "LinkedIn InMail": "linkedin-inmail",
+    "Email": "email",
+    "Meeting Invite": "meeting", // Deprecated, but map to meeting
+    "Meeting": "meeting",
+    "Phone Call": "phone-call",
+    "Follow-up Email": "email", // Deprecated, but map to email
+    "Reply Received": "reply-received",
+  };
+
+  return events.map((event) => {
+    // If the event type is already an ID (starts with lowercase or has hyphen), leave it
+    if (event.type.includes("-") || event.type[0] === event.type[0].toLowerCase()) {
+      return event;
+    }
+
+    // Otherwise, migrate it
+    const newType = typeMapping[event.type] || "email"; // Default to email if unknown
+    return {
+      ...event,
+      type: newType,
+    };
+  });
+};
+
 export const useStore = create<TempoState>()(
   persist(
     (set, get) => ({
@@ -52,6 +91,10 @@ export const useStore = create<TempoState>()(
       people: [],
       companies: [],
       events: [],
+      customEventTypes: [],
+
+      // Run migrations on hydration
+      _hasHydrated: false,
 
       // People actions
       addPerson: (person) => {
@@ -161,16 +204,111 @@ export const useStore = create<TempoState>()(
               new Date(b.date).getTime() - new Date(a.date).getTime()
           ),
 
+      // Event Type actions
+      getAllEventTypes: () => {
+        const customTypes = get().customEventTypes;
+        return [...DEFAULT_EVENT_TYPES, ...customTypes];
+      },
+
+      getEventTypeById: (id) => {
+        const allTypes = get().getAllEventTypes();
+        return allTypes.find((type) => type.id === id);
+      },
+
+      addEventType: (name, category, followUpDays) => {
+        const id = `custom-${generateId()}`;
+        const newType: EventTypeDefinition = {
+          id,
+          name,
+          category,
+          defaultFollowUpDays: followUpDays,
+          isCustom: true,
+          createdAt: getTimestamp(),
+        };
+        set((state) => ({
+          customEventTypes: [...state.customEventTypes, newType],
+        }));
+        return id;
+      },
+
+      updateEventType: (id, updates) => {
+        // Can update both default and custom types
+        const allTypes = get().getAllEventTypes();
+        const typeToUpdate = allTypes.find((t) => t.id === id);
+        
+        if (!typeToUpdate) return;
+        
+        if (typeToUpdate.isCustom) {
+          // Update custom type
+          set((state) => ({
+            customEventTypes: state.customEventTypes.map((t) =>
+              t.id === id ? { ...t, ...updates } : t
+            ),
+          }));
+        } else {
+          // For default types, store overrides in custom types
+          const existingOverride = get().customEventTypes.find((t) => t.id === id);
+          if (existingOverride) {
+            set((state) => ({
+              customEventTypes: state.customEventTypes.map((t) =>
+                t.id === id ? { ...t, ...updates } : t
+              ),
+            }));
+          } else {
+            // Create override
+            const override: EventTypeDefinition = {
+              ...typeToUpdate,
+              ...updates,
+            };
+            set((state) => ({
+              customEventTypes: [...state.customEventTypes, override],
+            }));
+          }
+        }
+      },
+
+      deleteEventType: (id) => {
+        const eventsUsingType = get().getEventsUsingEventType(id);
+        
+        if (eventsUsingType.length > 0) {
+          return { success: false, eventsUsingType };
+        }
+        
+        set((state) => ({
+          customEventTypes: state.customEventTypes.filter((t) => t.id !== id),
+        }));
+        
+        return { success: true };
+      },
+
+      getEventsUsingEventType: (typeId) => {
+        return get().events.filter((e) => e.type === typeId);
+      },
+
       // Follow-up logic
       getFollowUpStatus: (personId): FollowUpStatus => {
         const person = get().getPerson(personId);
         const events = get().getEventsByPerson(personId);
         const lastEvent = events[0]; // Already sorted by date descending
+        const lastEventType = lastEvent ? get().getEventTypeById(lastEvent.type) : undefined;
+
+        // Calculate days since/until last event
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const eventDate = lastEvent ? new Date(lastEvent.date) : null;
+        if (eventDate) eventDate.setHours(0, 0, 0, 0);
+        
+        const daysSinceLastEvent = eventDate
+          ? Math.floor((today.getTime() - eventDate.getTime()) / (1000 * 60 * 60 * 24))
+          : Infinity;
+        
+        const isFutureEvent = eventDate ? eventDate > today : false;
 
         // If manual override is set, use that
         if (person?.nextFollowUpDate) {
           const nextFollowUpDate = new Date(person.nextFollowUpDate);
-          const today = new Date();
+          nextFollowUpDate.setHours(0, 0, 0, 0);
           const daysUntilFollowUp = Math.ceil(
             (nextFollowUpDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
           );
@@ -179,15 +317,12 @@ export const useStore = create<TempoState>()(
           return {
             personId,
             lastEvent,
-            daysSinceLastEvent: lastEvent
-              ? Math.floor(
-                  (new Date().getTime() - new Date(lastEvent.date).getTime()) /
-                    (1000 * 60 * 60 * 24)
-                )
-              : Infinity,
+            lastEventType,
+            daysSinceLastEvent,
             suggestedFollowUpDays: 0, // Manual override
             daysOverdue: Math.max(0, daysOverdue),
             isOverdue: daysOverdue > 0,
+            isFutureEvent,
             urgency:
               daysOverdue > 7
                 ? "critical"
@@ -202,32 +337,42 @@ export const useStore = create<TempoState>()(
         }
 
         // Calculate based on last event
-        if (!lastEvent) {
+        if (!lastEvent || !lastEventType) {
           return {
             personId,
             lastEvent: undefined,
+            lastEventType: undefined,
             daysSinceLastEvent: Infinity,
             suggestedFollowUpDays: 7, // Default
             daysOverdue: 0,
             isOverdue: false,
+            isFutureEvent: false,
             urgency: "none",
           };
         }
 
-        const daysSinceLastEvent = Math.floor(
-          (new Date().getTime() - new Date(lastEvent.date).getTime()) /
-            (1000 * 60 * 60 * 24)
-        );
-        const suggestedFollowUpDays = EVENT_FOLLOW_UP_DAYS[lastEvent.type];
-        const daysOverdue = daysSinceLastEvent - suggestedFollowUpDays;
+        // Use custom follow-up days if set, otherwise use event type default
+        const suggestedFollowUpDays = lastEvent.customFollowUpDays || lastEventType.defaultFollowUpDays;
+        
+        // For future events, calculate from the future date
+        let daysOverdue = 0;
+        if (isFutureEvent) {
+          // Event is in the future, so we're not overdue yet
+          daysOverdue = 0;
+        } else {
+          // Event is in the past, calculate overdue normally
+          daysOverdue = daysSinceLastEvent - suggestedFollowUpDays;
+        }
 
         return {
           personId,
           lastEvent,
+          lastEventType,
           daysSinceLastEvent,
           suggestedFollowUpDays,
           daysOverdue: Math.max(0, daysOverdue),
           isOverdue: daysOverdue > 0,
+          isFutureEvent,
           urgency:
             daysOverdue > 7
               ? "critical"
@@ -244,13 +389,30 @@ export const useStore = create<TempoState>()(
       getAllFollowUpStatuses: () => {
         const people = get().people;
         return people
-          .filter((person) => person.status === "active") // Only show active people
-          .map((person) => get().getFollowUpStatus(person.id))
+          .filter((person) => person.status === "active") // Only show active people with events
+          .map((person) => ({
+            person,
+            status: get().getFollowUpStatus(person.id),
+          }))
+          .filter(({ person, status }) => {
+            // Always show if they have at least one event
+            const events = get().getEventsByPerson(person.id);
+            return events.length > 0;
+          })
+          .map(({ status }) => status)
           .sort((a, b) => b.daysOverdue - a.daysOverdue);
       },
     }),
     {
       name: "tempo-storage",
+      onRehydrateStorage: () => (state) => {
+        if (state && !state._hasHydrated) {
+          // Run migration
+          const migratedEvents = migrateEventTypes(state.events);
+          state.events = migratedEvents;
+          state._hasHydrated = true;
+        }
+      },
     }
   )
 );

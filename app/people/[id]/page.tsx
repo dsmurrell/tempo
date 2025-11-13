@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore } from "@/store/useStore";
@@ -14,6 +14,11 @@ export default function PersonDetailPage() {
   const params = useParams();
   const router = useRouter();
   const personId = params.id as string;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const {
     getPerson,
@@ -27,6 +32,15 @@ export default function PersonDetailPage() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Prevent hydration mismatch by only rendering after client mount
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="animate-pulse text-gray-500 dark:text-gray-400">Loading...</div>
+      </div>
+    );
+  }
 
   const person = getPerson(personId);
   const company = person?.companyId ? getCompany(person.companyId) : undefined;
@@ -56,12 +70,28 @@ export default function PersonDetailPage() {
     router.push("/people");
   };
 
+  const getNextStatus = (currentStatus: string) => {
+    if (currentStatus === "active") return "parked";
+    if (currentStatus === "parked") return "closed";
+    return "active"; // closed -> active
+  };
+
   const toggleStatus = () => {
     if (person) {
       updatePerson(person.id, {
-        status: person.status === "active" ? "closed" : "active",
+        status: getNextStatus(person.status),
       });
     }
+  };
+
+  const getStatusColor = (status: string) => {
+    if (status === "active") return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50";
+    if (status === "parked") return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/50";
+    return "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600";
+  };
+
+  const getStatusLabel = (status: string) => {
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   return (
@@ -92,27 +122,24 @@ export default function PersonDetailPage() {
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-8">
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {person.name}
-                </h1>
-                <button
-                  onClick={toggleStatus}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                    person.status === "active"
-                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50"
-                      : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {person.status === "active" ? "Active" : "Closed"}
-                </button>
-                {person.status === "active" && (
-                  <FollowUpBadge
-                    urgency={followUpStatus.urgency}
-                    daysOverdue={followUpStatus.daysOverdue}
-                  />
-                )}
-              </div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                          {person.name}
+                        </h1>
+                        <button
+                          onClick={toggleStatus}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${getStatusColor(person.status)}`}
+                          title={`Click to change status (currently ${person.status})`}
+                        >
+                          {getStatusLabel(person.status)}
+                        </button>
+                        {person.status === "active" && (
+                          <FollowUpBadge
+                            urgency={followUpStatus.urgency}
+                            daysOverdue={followUpStatus.daysOverdue}
+                          />
+                        )}
+                      </div>
               {person.jobTitle && (
                 <p className="text-gray-600 dark:text-gray-400 mb-2">
                   {person.jobTitle}
