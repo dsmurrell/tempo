@@ -266,6 +266,8 @@ export function parseCSV(csvContent: string): {
         linkedinUrl: companyLinkedIn || undefined,
         websiteUrl: companyWebsite || undefined,
         notes: companyNotes || undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
     }
 
@@ -280,6 +282,8 @@ export function parseCSV(csvContent: string): {
         notes: personNotes || undefined,
         companyId: companyId || undefined,
         status: (personStatus as "active" | "parked" | "closed") || "active",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
     }
 
@@ -295,6 +299,8 @@ export function parseCSV(csvContent: string): {
         customFollowUpDays: eventCustomFollowUpDays
           ? parseInt(eventCustomFollowUpDays, 10)
           : undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
     }
 
