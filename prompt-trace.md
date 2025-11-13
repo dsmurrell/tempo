@@ -117,3 +117,82 @@ PASTE ERROR FROM APP
 
 and now when I have an event on someone, we aren't seeing that show up on the home page... once an event is on someone we should always see them on the home page until they are closed or parked... and let's create a new state that is called parked which you can switch to from active or closed (and update the UI/UX to change this accordingly)
 
+PROMPT 7:
+
+We used to create the company if you couldn't find it in the list you were searching for when creating a person... this seems to have broken... can we make sure that if we put a company that we don't pick from the search for companies on the person creation, that the company gets created and the person gets linked to them.
+
+Also, let's allow you to edit the follow up days for an event as well as set it on creation, and give the user the ability to pick a date as an extra option for setting the follow up days as they might want to specify a fixed date and then we can work out and update follow up days from that.
+
+On the person page... if they have a follow up listed on the todo's home page, then we should also see it on the person page.
+
+Also, can we add the functionality to export your data to a single CSV file (that you download) that caters for this structure (maybe with repeating info on rows if required - one event per row), and then allow import of a CSV in this format so that we can move someone's data from one device to another.
+
+PROMPT 8:
+
+Yes, let's implement the CSV import/export functionality.
+
+And in the same go, can we split the message category into outbound message and inbound message categories, but the default 'Reply Received' as an inbound message and don't show 'They Replied' on inbound messages as well as meetings.
+
+PROMPT 9:
+
+I did import CSV, refresh, and it errors
+
+PASTE ERROR FROM APP
+
+can we fix
+
+PROMPT 10:
+
+can you run npm run build and fix
+
+PROMPT 11:
+
+but now I can't edit the default follow up days for a default eventtype
+
+PROMPT 12:
+
+Nope, not what I wanted... this isn't due today it's already overdue... so it should appear in the overdue section
+
+(adding picture of problem)
+
+PROMPT 13:
+
+wait, if something is due in the future then it should be in on track, if it's due today, it should be in due today and if it's due yesterday or before it should be in overdue
+
+PROMPT 14:
+
+I'm still seeing this event as due today when it's follow up time is 3 days so it should be in on track!
+
+(adding picture of problem)
+
+PROMPT 15:
+
+for these, it doesn't seem to be ordering the events by time if they are on the same day, also, on the home page, it's not considering the right one maybe becuase of this ordering bug.
+
+(adding two images)
+
+PROMPT 16:
+
+the first picture is correct, but on the person page it's showing -2 days overdue... but that means that it's on track! (because it's not overdue!)
+
+(adding two images)
+
+PROMPT 17:
+
+Don't take it away from that page, just fix it so that it says still 2 days to sort or something! the problem also exists on the cards.
+
+While you fix this go over the logic and make sure it's going to show the right thing for on track, due today, and overdue
+
+PROMPT 18:
+
+If a user has no events their card on the people page shows due today and on the person detail page shows due today, but that pill shouldn't show when there are no events
+
+PROMPT 19:
+
+Can we move phone call into the meetings category... also can we add a message received default eventype in the inbound message category
+
+PROMPT 20:
+
+Can we drop the user on the person detail page after a person is created... same for the creation of a company from the company creation dialog.
+
+
