@@ -18,7 +18,8 @@ export default function AddEventModal({
   const today = new Date().toISOString().split("T")[0];
   const now = new Date().toTimeString().slice(0, 5);
   const eventTypes = getAllEventTypes();
-  const messageTypes = eventTypes.filter((t) => t.category === "message");
+  const outboundMessageTypes = eventTypes.filter((t) => t.category === "outbound-message");
+  const inboundMessageTypes = eventTypes.filter((t) => t.category === "inbound-message");
   const meetingTypes = eventTypes.filter((t) => t.category === "meeting");
 
   const [formData, setFormData] = useState({
@@ -97,9 +98,18 @@ export default function AddEventModal({
               }
               className="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:bg-gray-800 dark:text-white transition-colors duration-200 text-sm"
             >
-              {messageTypes.length > 0 && (
-                <optgroup label="Messages">
-                  {messageTypes.map((type) => (
+              {outboundMessageTypes.length > 0 && (
+                <optgroup label="Outbound Messages">
+                  {outboundMessageTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {inboundMessageTypes.length > 0 && (
+                <optgroup label="Inbound Messages">
+                  {inboundMessageTypes.map((type) => (
                     <option key={type.id} value={type.id}>
                       {type.name}
                     </option>

@@ -1,5 +1,5 @@
 // Event type category - determines UI behavior
-export type EventTypeCategory = "meeting" | "message";
+export type EventTypeCategory = "meeting" | "outbound-message" | "inbound-message";
 
 // Event type definition
 export interface EventTypeDefinition {
@@ -16,28 +16,28 @@ export const DEFAULT_EVENT_TYPES: EventTypeDefinition[] = [
   {
     id: "email",
     name: "Email",
-    category: "message",
+    category: "outbound-message",
     defaultFollowUpDays: 5,
     isCustom: false,
   },
   {
     id: "linkedin-connection",
     name: "LinkedIn Connection Request",
-    category: "message",
+    category: "outbound-message",
     defaultFollowUpDays: 7,
     isCustom: false,
   },
   {
     id: "linkedin-inmail",
     name: "LinkedIn InMail",
-    category: "message",
+    category: "outbound-message",
     defaultFollowUpDays: 7,
     isCustom: false,
   },
   {
     id: "phone-call",
     name: "Phone Call",
-    category: "message",
+    category: "outbound-message",
     defaultFollowUpDays: 7,
     isCustom: false,
   },
@@ -51,7 +51,7 @@ export const DEFAULT_EVENT_TYPES: EventTypeDefinition[] = [
   {
     id: "reply-received",
     name: "Reply Received",
-    category: "message",
+    category: "inbound-message",
     defaultFollowUpDays: 2,
     isCustom: false,
   },

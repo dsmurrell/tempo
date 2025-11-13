@@ -80,9 +80,9 @@ export default function ToDoItem({
     updatePerson(person.id, { status: "closed" });
   };
 
-  // Show "They Replied" button only for message-type events
+  // Show "They Replied" button only for outbound message events (not meetings or inbound)
   const showReplyButton =
-    followUpStatus.lastEventType?.category === "message" &&
+    followUpStatus.lastEventType?.category === "outbound-message" &&
     !followUpStatus.isFutureEvent;
 
   return (

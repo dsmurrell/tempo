@@ -40,10 +40,14 @@ interface TempoState {
   // Event Type actions
   getAllEventTypes: () => EventTypeDefinition[];
   getEventTypeById: (id: string) => EventTypeDefinition | undefined;
-  addEventType: (name: string, category: "meeting" | "message", followUpDays: number) => string;
+  addEventType: (name: string, category: "meeting" | "outbound-message" | "inbound-message", followUpDays: number) => string;
   updateEventType: (id: string, updates: Partial<EventTypeDefinition>) => void;
   deleteEventType: (id: string) => { success: boolean; eventsUsingType?: Event[] };
   getEventsUsingEventType: (typeId: string) => Event[];
+
+  // Import/Export actions
+  exportData: () => { people: Person[]; companies: Company[]; events: Event[]; customEventTypes: EventTypeDefinition[] };
+  importData: (data: { people: Person[]; companies: Company[]; events: Event[]; customEventTypes: EventTypeDefinition[] }) => void;
 
   // Follow-up logic
   getFollowUpStatus: (personId: string) => FollowUpStatus;
@@ -401,6 +405,27 @@ export const useStore = create<TempoState>()(
           })
           .map(({ status }) => status)
           .sort((a, b) => b.daysOverdue - a.daysOverdue);
+      },
+
+      // Export all data
+      exportData: () => {
+        const state = get();
+        return {
+          people: state.people,
+          companies: state.companies,
+          events: state.events,
+          customEventTypes: state.customEventTypes,
+        };
+      },
+
+      // Import data (replaces existing data)
+      importData: (data) => {
+        set({
+          people: data.people,
+          companies: data.companies,
+          events: data.events,
+          customEventTypes: data.customEventTypes || [],
+        });
       },
     }),
     {

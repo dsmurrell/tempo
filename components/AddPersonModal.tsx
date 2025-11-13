@@ -22,6 +22,7 @@ export default function AddPersonModal({
     companyId: "",
     notes: "",
   });
+  const [companyInputText, setCompanyInputText] = useState("");
 
   if (!isOpen) return null;
 
@@ -31,12 +32,27 @@ export default function AddPersonModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    let finalCompanyId = formData.companyId;
+    
+    // If there's company text but no ID, create the company
+    if (companyInputText && !finalCompanyId) {
+      const existingCompany = companies.find(
+        (c) => c.name.toLowerCase() === companyInputText.toLowerCase()
+      );
+      if (existingCompany) {
+        finalCompanyId = existingCompany.id;
+      } else {
+        finalCompanyId = handleCreateCompany(companyInputText);
+      }
+    }
+    
     addPerson({
       name: formData.name,
       email: formData.email || undefined,
       jobTitle: formData.jobTitle || undefined,
       linkedinUrl: formData.linkedinUrl || undefined,
-      companyId: formData.companyId || undefined,
+      companyId: finalCompanyId || undefined,
       notes: formData.notes || undefined,
       status: "active",
     });
@@ -48,6 +64,7 @@ export default function AddPersonModal({
       companyId: "",
       notes: "",
     });
+    setCompanyInputText("");
     onClose();
   };
 
@@ -116,6 +133,7 @@ export default function AddPersonModal({
                 setFormData({ ...formData, companyId: companyId || "" })
               }
               onCreateCompany={handleCreateCompany}
+              onInputChange={setCompanyInputText}
             />
           </div>
 

@@ -8,6 +8,7 @@ interface CompanyAutocompleteProps {
   selectedCompanyId?: string;
   onSelectCompany: (companyId: string | undefined) => void;
   onCreateCompany: (name: string) => string; // Returns new company ID
+  onInputChange?: (value: string) => void; // Track input text for manual company creation
 }
 
 export default function CompanyAutocomplete({
@@ -15,6 +16,7 @@ export default function CompanyAutocomplete({
   selectedCompanyId,
   onSelectCompany,
   onCreateCompany,
+  onInputChange,
 }: CompanyAutocompleteProps) {
   const [inputValue, setInputValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -47,6 +49,11 @@ export default function CompanyAutocomplete({
     setInputValue(value);
     setIsOpen(true);
     setHighlightedIndex(0);
+    
+    // Notify parent of input text change
+    if (onInputChange) {
+      onInputChange(value);
+    }
     
     // Clear selection if input is cleared
     if (!value) {
