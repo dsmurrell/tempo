@@ -42,9 +42,10 @@ export default function Home() {
     return nameMatch || emailMatch || jobTitleMatch || notesMatch || companyMatch || eventMatch;
   });
   
-  const overdueFollowUps = filteredStatuses.filter((status) => status.isOverdue);
+  const overdueFollowUps = filteredStatuses.filter((status) => status.daysOverdue > 0 && !status.isFutureEvent);
+  const dueTodayFollowUps = filteredStatuses.filter((status) => status.daysOverdue === 0 && !status.isFutureEvent);
   const upcomingFollowUps = filteredStatuses.filter(
-    (status) => !status.isOverdue && status.lastEvent
+    (status) => status.daysOverdue < 0 && status.lastEvent
   );
 
   return (
@@ -165,6 +166,31 @@ export default function Home() {
               </div>
             )}
 
+            {dueTodayFollowUps.length > 0 && (
+              <div>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  Due Today ({dueTodayFollowUps.length})
+                </h2>
+                <div className="space-y-4">
+                  {dueTodayFollowUps.map((status) => {
+                    const person = people.find((p) => p.id === status.personId);
+                    if (!person) return null;
+                    const company = person.companyId
+                      ? getCompany(person.companyId)
+                      : undefined;
+                    return (
+                      <ToDoItem
+                        key={person.id}
+                        person={person}
+                        company={company}
+                        followUpStatus={status}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {upcomingFollowUps.length > 0 && (
               <div>
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
@@ -190,7 +216,7 @@ export default function Home() {
               </div>
             )}
 
-            {overdueFollowUps.length === 0 && upcomingFollowUps.length === 0 && (
+            {overdueFollowUps.length === 0 && dueTodayFollowUps.length === 0 && upcomingFollowUps.length === 0 && (
               <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-12 text-center">
                 <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/50 rounded-xl flex items-center justify-center border border-emerald-100 dark:border-emerald-900 mx-auto mb-4">
                   <svg

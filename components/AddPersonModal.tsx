@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import CompanyAutocomplete from "./CompanyAutocomplete";
 
@@ -14,6 +15,7 @@ export default function AddPersonModal({
   onClose,
 }: AddPersonModalProps) {
   const { addPerson, addCompany, companies } = useStore();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -47,7 +49,7 @@ export default function AddPersonModal({
       }
     }
     
-    addPerson({
+    const personId = addPerson({
       name: formData.name,
       email: formData.email || undefined,
       jobTitle: formData.jobTitle || undefined,
@@ -66,6 +68,9 @@ export default function AddPersonModal({
     });
     setCompanyInputText("");
     onClose();
+    
+    // Navigate to the person's detail page
+    router.push(`/people/${personId}`);
   };
 
   return (

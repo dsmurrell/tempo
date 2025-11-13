@@ -10,25 +10,39 @@ export default function FollowUpBadge({
   daysOverdue,
 }: FollowUpBadgeProps) {
   const getVariant = () => {
-    switch (urgency) {
-      case "critical":
-        return "error";
-      case "high":
-        return "warning";
-      case "medium":
-        return "warning";
-      case "low":
-        return "success";
-      case "none":
-        return "soft";
+    if (daysOverdue > 0) {
+      // Overdue
+      switch (urgency) {
+        case "critical":
+          return "error";
+        case "high":
+          return "warning";
+        case "medium":
+          return "warning";
+        default:
+          return "error";
+      }
+    } else if (daysOverdue === 0) {
+      // Due today
+      return "info";
+    } else {
+      // On track (negative daysOverdue)
+      return "success";
     }
   };
 
   const getText = () => {
-    if (urgency === "none") {
-      return "On Track";
+    if (daysOverdue > 0) {
+      // Overdue
+      return `${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} overdue`;
+    } else if (daysOverdue === 0) {
+      // Due today
+      return "Due Today";
+    } else {
+      // On track (negative means days remaining)
+      const daysRemaining = Math.abs(daysOverdue);
+      return `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} to go`;
     }
-    return `${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} overdue`;
   };
 
   return <Badge variant={getVariant()}>{getText()}</Badge>;

@@ -126,19 +126,19 @@ export default function PersonDetailPage() {
                         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
                           {person.name}
                         </h1>
-                        <button
-                          onClick={toggleStatus}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${getStatusColor(person.status)}`}
-                          title={`Click to change status (currently ${person.status})`}
-                        >
-                          {getStatusLabel(person.status)}
-                        </button>
-                        {person.status === "active" && (
-                          <FollowUpBadge
-                            urgency={followUpStatus.urgency}
-                            daysOverdue={followUpStatus.daysOverdue}
-                          />
-                        )}
+                              <button
+                                onClick={toggleStatus}
+                                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${getStatusColor(person.status)}`}
+                                title={`Click to change status (currently ${person.status})`}
+                              >
+                                {getStatusLabel(person.status)}
+                              </button>
+                              {person.status === "active" && followUpStatus.lastEvent && (
+                                <FollowUpBadge
+                                  urgency={followUpStatus.urgency}
+                                  daysOverdue={followUpStatus.daysOverdue}
+                                />
+                              )}
                       </div>
               {person.jobTitle && (
                 <p className="text-gray-600 dark:text-gray-400 mb-2">

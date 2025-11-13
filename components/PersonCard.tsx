@@ -30,7 +30,7 @@ export default function PersonCard({
               </p>
             )}
           </div>
-          {followUpStatus && (
+          {followUpStatus && followUpStatus.lastEvent && (
             <FollowUpBadge
               urgency={followUpStatus.urgency}
               daysOverdue={followUpStatus.daysOverdue}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 
 interface AddCompanyModalProps {
@@ -13,6 +14,7 @@ export default function AddCompanyModal({
   onClose,
 }: AddCompanyModalProps) {
   const { addCompany } = useStore();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     linkedinUrl: "",
@@ -24,7 +26,7 @@ export default function AddCompanyModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addCompany({
+    const companyId = addCompany({
       name: formData.name,
       linkedinUrl: formData.linkedinUrl || undefined,
       websiteUrl: formData.websiteUrl || undefined,
@@ -37,6 +39,9 @@ export default function AddCompanyModal({
       notes: "",
     });
     onClose();
+    
+    // Navigate to the company's detail page
+    router.push(`/companies/${companyId}`);
   };
 
   return (

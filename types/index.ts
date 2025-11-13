@@ -37,7 +37,7 @@ export const DEFAULT_EVENT_TYPES: EventTypeDefinition[] = [
   {
     id: "phone-call",
     name: "Phone Call",
-    category: "outbound-message",
+    category: "meeting",
     defaultFollowUpDays: 7,
     isCustom: false,
   },
@@ -51,6 +51,13 @@ export const DEFAULT_EVENT_TYPES: EventTypeDefinition[] = [
   {
     id: "reply-received",
     name: "Reply Received",
+    category: "inbound-message",
+    defaultFollowUpDays: 2,
+    isCustom: false,
+  },
+  {
+    id: "message-received",
+    name: "Message Received",
     category: "inbound-message",
     defaultFollowUpDays: 2,
     isCustom: false,

@@ -58,17 +58,31 @@ export default function ToDoItem({
   };
 
   const getTimingMessage = () => {
-    if (followUpStatus.isOverdue) {
+    if (followUpStatus.daysOverdue > 0) {
+      // Overdue
       return `${followUpStatus.daysOverdue} day${followUpStatus.daysOverdue !== 1 ? "s" : ""} overdue`;
+    } else if (followUpStatus.daysOverdue === 0) {
+      // Due today
+      return "Due today";
+    } else {
+      // On track (negative daysOverdue means days remaining)
+      const daysRemaining = Math.abs(followUpStatus.daysOverdue);
+      return `Follow up in ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`;
     }
-    const daysUntil = followUpStatus.suggestedFollowUpDays - followUpStatus.daysSinceLastEvent;
-    return `Follow up in ${daysUntil} day${daysUntil !== 1 ? "s" : ""}`;
   };
 
   const getTimingColor = () => {
-    if (followUpStatus.urgency === "critical") return "text-red-600 dark:text-red-400";
-    if (followUpStatus.urgency === "high") return "text-orange-600 dark:text-orange-400";
-    if (followUpStatus.urgency === "medium") return "text-yellow-600 dark:text-yellow-400";
+    if (followUpStatus.daysOverdue > 0) {
+      // Overdue
+      if (followUpStatus.urgency === "critical") return "text-red-600 dark:text-red-400";
+      if (followUpStatus.urgency === "high") return "text-orange-600 dark:text-orange-400";
+      if (followUpStatus.urgency === "medium") return "text-yellow-600 dark:text-yellow-400";
+      return "text-red-600 dark:text-red-400";
+    } else if (followUpStatus.daysOverdue === 0) {
+      // Due today - blue
+      return "text-blue-600 dark:text-blue-400";
+    }
+    // On track - green
     return "text-emerald-600 dark:text-emerald-400";
   };
 

@@ -203,15 +203,29 @@ export const useStore = create<TempoState>()(
       getEventsByPerson: (personId) =>
         get()
           .events.filter((e) => e.personId === personId)
-          .sort(
-            (a, b) =>
-              new Date(b.date).getTime() - new Date(a.date).getTime()
-          ),
+          .sort((a, b) => {
+            // Combine date and time for accurate sorting
+            const aDateTime = new Date(`${a.date}T${a.time || '00:00'}`).getTime();
+            const bDateTime = new Date(`${b.date}T${b.time || '00:00'}`).getTime();
+            return bDateTime - aDateTime; // Most recent first
+          }),
 
       // Event Type actions
       getAllEventTypes: () => {
         const customTypes = get().customEventTypes;
-        return [...DEFAULT_EVENT_TYPES, ...customTypes];
+        const allTypes = [...DEFAULT_EVENT_TYPES, ...customTypes];
+        
+        // Deduplicate by ID - items from customEventTypes override defaults
+        const typeMap = new Map<string, EventTypeDefinition>();
+        DEFAULT_EVENT_TYPES.forEach((type) => {
+          typeMap.set(type.id, type);
+        });
+        // Custom types and overrides take precedence
+        customTypes.forEach((type) => {
+          typeMap.set(type.id, type);
+        });
+        
+        return Array.from(typeMap.values());
       },
 
       getEventTypeById: (id) => {
@@ -250,19 +264,20 @@ export const useStore = create<TempoState>()(
             ),
           }));
         } else {
-          // For default types, store overrides in custom types
+          // For default types, store overrides in custom types but keep isCustom: false
           const existingOverride = get().customEventTypes.find((t) => t.id === id);
           if (existingOverride) {
             set((state) => ({
               customEventTypes: state.customEventTypes.map((t) =>
-                t.id === id ? { ...t, ...updates } : t
+                t.id === id ? { ...t, ...updates, isCustom: false } : t
               ),
             }));
           } else {
-            // Create override
+            // Create override - keep isCustom: false so it appears in default section
             const override: EventTypeDefinition = {
               ...typeToUpdate,
               ...updates,
+              isCustom: false, // Keep as false so it shows in default types section
             };
             set((state) => ({
               customEventTypes: [...state.customEventTypes, override],
@@ -324,7 +339,7 @@ export const useStore = create<TempoState>()(
             lastEventType,
             daysSinceLastEvent,
             suggestedFollowUpDays: 0, // Manual override
-            daysOverdue: Math.max(0, daysOverdue),
+            daysOverdue: daysOverdue,
             isOverdue: daysOverdue > 0,
             isFutureEvent,
             urgency:
@@ -348,7 +363,7 @@ export const useStore = create<TempoState>()(
             lastEventType: undefined,
             daysSinceLastEvent: Infinity,
             suggestedFollowUpDays: 7, // Default
-            daysOverdue: 0,
+            daysOverdue: -999, // Special value to indicate no events
             isOverdue: false,
             isFutureEvent: false,
             urgency: "none",
@@ -374,7 +389,7 @@ export const useStore = create<TempoState>()(
           lastEventType,
           daysSinceLastEvent,
           suggestedFollowUpDays,
-          daysOverdue: Math.max(0, daysOverdue),
+          daysOverdue: daysOverdue,
           isOverdue: daysOverdue > 0,
           isFutureEvent,
           urgency:
