@@ -88,6 +88,14 @@ const migrateEventTypes = (events: Event[]): Event[] => {
   });
 };
 
+// Migration: Ensure all people have a status field
+const migratePeopleStatus = (people: Person[]): Person[] => {
+  return people.map((person) => ({
+    ...person,
+    status: person.status || "active", // Default to active if missing
+  }));
+};
+
 export const useStore = create<TempoState>()(
   persist(
     (set, get) => ({
@@ -373,11 +381,14 @@ export const useStore = create<TempoState>()(
         // Use custom follow-up days if set, otherwise use event type default
         const suggestedFollowUpDays = lastEvent.customFollowUpDays || lastEventType.defaultFollowUpDays;
         
-        // For future events, calculate from the future date
+        // Calculate daysOverdue properly for both past and future events
         let daysOverdue = 0;
         if (isFutureEvent) {
-          // Event is in the future, so we're not overdue yet
-          daysOverdue = 0;
+          // Event is in the future - calculate days until the follow-up is due
+          // For future events, follow-up is due X days after the event date
+          const followUpDate = new Date(eventDate);
+          followUpDate.setDate(followUpDate.getDate() + suggestedFollowUpDays);
+          daysOverdue = Math.floor((today.getTime() - followUpDate.getTime()) / (1000 * 60 * 60 * 24));
         } else {
           // Event is in the past, calculate overdue normally
           daysOverdue = daysSinceLastEvent - suggestedFollowUpDays;
@@ -447,9 +458,11 @@ export const useStore = create<TempoState>()(
       name: "tempo-storage",
       onRehydrateStorage: () => (state) => {
         if (state && !state._hasHydrated) {
-          // Run migration
+          // Run migrations
           const migratedEvents = migrateEventTypes(state.events);
+          const migratedPeople = migratePeopleStatus(state.people);
           state.events = migratedEvents;
+          state.people = migratedPeople;
           state._hasHydrated = true;
         }
       },

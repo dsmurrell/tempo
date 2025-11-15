@@ -70,10 +70,10 @@ export default function PersonDetailPage() {
     router.push("/people");
   };
 
-  const getNextStatus = (currentStatus: string) => {
+  const getNextStatus = (currentStatus: string | undefined) => {
     if (currentStatus === "active") return "parked";
     if (currentStatus === "parked") return "closed";
-    return "active"; // closed -> active
+    return "active"; // closed -> active or undefined -> active
   };
 
   const toggleStatus = () => {
@@ -84,13 +84,14 @@ export default function PersonDetailPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
     if (status === "active") return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50";
     if (status === "parked") return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/50";
     return "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600";
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string | undefined) => {
+    if (!status) return "Active";
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
@@ -129,14 +130,15 @@ export default function PersonDetailPage() {
                               <button
                                 onClick={toggleStatus}
                                 className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${getStatusColor(person.status)}`}
-                                title={`Click to change status (currently ${person.status})`}
+                                title={`Click to change status (currently ${person.status || "active"})`}
                               >
                                 {getStatusLabel(person.status)}
                               </button>
-                              {person.status === "active" && followUpStatus.lastEvent && (
+                              {(person.status === "active" || !person.status) && followUpStatus.lastEvent && (
                                 <FollowUpBadge
                                   urgency={followUpStatus.urgency}
                                   daysOverdue={followUpStatus.daysOverdue}
+                                  isFutureEvent={followUpStatus.isFutureEvent}
                                 />
                               )}
                       </div>

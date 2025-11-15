@@ -3,11 +3,13 @@ import Badge from "./Badge";
 interface FollowUpBadgeProps {
   urgency: "critical" | "high" | "medium" | "low" | "none";
   daysOverdue: number;
+  isFutureEvent?: boolean;
 }
 
 export default function FollowUpBadge({
   urgency,
   daysOverdue,
+  isFutureEvent = false,
 }: FollowUpBadgeProps) {
   const getVariant = () => {
     if (daysOverdue > 0) {
@@ -41,7 +43,11 @@ export default function FollowUpBadge({
     } else {
       // On track (negative means days remaining)
       const daysRemaining = Math.abs(daysOverdue);
-      return `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} to go`;
+      if (isFutureEvent) {
+        return `Follow up in ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`;
+      } else {
+        return `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} to go`;
+      }
     }
   };
 

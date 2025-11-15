@@ -34,6 +34,7 @@ export default function PersonCard({
             <FollowUpBadge
               urgency={followUpStatus.urgency}
               daysOverdue={followUpStatus.daysOverdue}
+              isFutureEvent={followUpStatus.isFutureEvent}
             />
           )}
         </div>
@@ -49,7 +50,7 @@ export default function PersonCard({
                 : "soft"
             }
           >
-            {person.status.charAt(0).toUpperCase() + person.status.slice(1)}
+            {person.status ? person.status.charAt(0).toUpperCase() + person.status.slice(1) : "Active"}
           </Badge>
         </div>
 
@@ -63,9 +64,19 @@ export default function PersonCard({
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
             <span>
-              Last: {followUpStatus.lastEvent.type} •{" "}
-              {followUpStatus.daysSinceLastEvent} day
-              {followUpStatus.daysSinceLastEvent !== 1 ? "s" : ""} ago
+              {followUpStatus.isFutureEvent ? (
+                <>
+                  Next: {followUpStatus.lastEvent.type} •{" "}
+                  in {Math.abs(followUpStatus.daysSinceLastEvent)} day
+                  {Math.abs(followUpStatus.daysSinceLastEvent) !== 1 ? "s" : ""}
+                </>
+              ) : (
+                <>
+                  Last: {followUpStatus.lastEvent.type} •{" "}
+                  {followUpStatus.daysSinceLastEvent} day
+                  {followUpStatus.daysSinceLastEvent !== 1 ? "s" : ""} ago
+                </>
+              )}
             </span>
           </div>
         )}
