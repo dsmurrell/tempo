@@ -222,7 +222,7 @@ export const useStore = create<TempoState>()(
       getAllEventTypes: () => {
         const customTypes = get().customEventTypes;
         const allTypes = [...DEFAULT_EVENT_TYPES, ...customTypes];
-        
+
         // Deduplicate by ID - items from customEventTypes override defaults
         const typeMap = new Map<string, EventTypeDefinition>();
         DEFAULT_EVENT_TYPES.forEach((type) => {
@@ -232,7 +232,7 @@ export const useStore = create<TempoState>()(
         customTypes.forEach((type) => {
           typeMap.set(type.id, type);
         });
-        
+
         return Array.from(typeMap.values());
       },
 
@@ -261,9 +261,9 @@ export const useStore = create<TempoState>()(
         // Can update both default and custom types
         const allTypes = get().getAllEventTypes();
         const typeToUpdate = allTypes.find((t) => t.id === id);
-        
+
         if (!typeToUpdate) return;
-        
+
         if (typeToUpdate.isCustom) {
           // Update custom type
           set((state) => ({
@@ -296,15 +296,15 @@ export const useStore = create<TempoState>()(
 
       deleteEventType: (id) => {
         const eventsUsingType = get().getEventsUsingEventType(id);
-        
+
         if (eventsUsingType.length > 0) {
           return { success: false, eventsUsingType };
         }
-        
+
         set((state) => ({
           customEventTypes: state.customEventTypes.filter((t) => t.id !== id),
         }));
-        
+
         return { success: true };
       },
 
@@ -322,14 +322,14 @@ export const useStore = create<TempoState>()(
         // Calculate days since/until last event
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const eventDate = lastEvent ? new Date(lastEvent.date) : null;
         if (eventDate) eventDate.setHours(0, 0, 0, 0);
-        
+
         const daysSinceLastEvent = eventDate
           ? Math.floor((today.getTime() - eventDate.getTime()) / (1000 * 60 * 60 * 24))
           : Infinity;
-        
+
         const isFutureEvent = eventDate ? eventDate > today : false;
 
         // If manual override is set, use that
@@ -354,12 +354,12 @@ export const useStore = create<TempoState>()(
               daysOverdue > 7
                 ? "critical"
                 : daysOverdue > 3
-                ? "high"
-                : daysOverdue > 0
-                ? "medium"
-                : daysOverdue > -3
-                ? "low"
-                : "none",
+                  ? "high"
+                  : daysOverdue > 0
+                    ? "medium"
+                    : daysOverdue > -3
+                      ? "low"
+                      : "none",
           };
         }
 
@@ -380,10 +380,10 @@ export const useStore = create<TempoState>()(
 
         // Use custom follow-up days if set, otherwise use event type default
         const suggestedFollowUpDays = lastEvent.customFollowUpDays || lastEventType.defaultFollowUpDays;
-        
+
         // Calculate daysOverdue properly for both past and future events
         let daysOverdue = 0;
-        if (isFutureEvent) {
+        if (isFutureEvent && eventDate) {
           // Event is in the future - calculate days until the follow-up is due
           // For future events, follow-up is due X days after the event date
           const followUpDate = new Date(eventDate);
@@ -407,12 +407,12 @@ export const useStore = create<TempoState>()(
             daysOverdue > 7
               ? "critical"
               : daysOverdue > 3
-              ? "high"
-              : daysOverdue > 0
-              ? "medium"
-              : daysOverdue > -3
-              ? "low"
-              : "none",
+                ? "high"
+                : daysOverdue > 0
+                  ? "medium"
+                  : daysOverdue > -3
+                    ? "low"
+                    : "none",
         };
       },
 
