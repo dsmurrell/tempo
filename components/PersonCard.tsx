@@ -41,13 +41,13 @@ export default function PersonCard({
 
         <div className="flex items-center gap-2 mb-3">
           {company && <Badge variant="soft">{company.name}</Badge>}
-          <Badge 
+          <Badge
             variant={
-              person.status === "active" 
-                ? "success" 
+              person.status === "active"
+                ? "success"
                 : person.status === "parked"
-                ? "warning"
-                : "soft"
+                  ? "warning"
+                  : "soft"
             }
           >
             {person.status ? person.status.charAt(0).toUpperCase() + person.status.slice(1) : "Active"}
@@ -64,15 +64,15 @@ export default function PersonCard({
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
             <span>
-              {followUpStatus.isFutureEvent ? (
+              {followUpStatus.isFutureEvent || followUpStatus.daysSinceLastEvent < 0 ? (
                 <>
-                  Next: {followUpStatus.lastEvent.type} •{" "}
+                  Next: {followUpStatus.lastEventType?.name || followUpStatus.lastEvent.type} •{" "}
                   in {Math.abs(followUpStatus.daysSinceLastEvent)} day
                   {Math.abs(followUpStatus.daysSinceLastEvent) !== 1 ? "s" : ""}
                 </>
               ) : (
                 <>
-                  Last: {followUpStatus.lastEvent.type} •{" "}
+                  Last: {followUpStatus.lastEventType?.name || followUpStatus.lastEvent.type} •{" "}
                   {followUpStatus.daysSinceLastEvent} day
                   {followUpStatus.daysSinceLastEvent !== 1 ? "s" : ""} ago
                 </>
